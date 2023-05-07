@@ -1,8 +1,6 @@
 package com.example.endofthetrack_project.Model;
 
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Cell class represent a cell on the board
@@ -18,7 +16,7 @@ public class Cell {
     private int x;
     private int y;
 
-    private Set<Piece> piece;
+    private List<Piece> piece;
 
     /**
      * create new cell
@@ -28,7 +26,24 @@ public class Cell {
     public Cell(int x, int y) {
         this.x = x;
         this.y = y;
-        this.piece = new LinkedHashSet<>();
+        this.piece = new LinkedList<>();
+    }
+
+    /**
+     * Creates a new Cell object as a copy of the specified Cell object.
+     *
+     * @param cell the Cell object to copy
+     */
+    public Cell(Cell cell) {
+        this.x = cell.x;
+        this.y = cell.y;
+        this.piece = new LinkedList<>();
+        for (Piece p : cell.piece) {
+            if (p instanceof Knight)
+                this.piece.add(new Knight((Knight) p));
+            if (p instanceof Ball)
+                this.piece.add(new Ball((Ball) p));
+        }
     }
 
     /**
@@ -59,7 +74,7 @@ public class Cell {
      * get the cell piece
      * @return cell piece
      */
-    public Set<Piece> getPiece() {
+    public List<Piece> getPiece() {
         return piece;
     }
 
@@ -68,9 +83,9 @@ public class Cell {
      * <p>
      * This function sets the piece in the cell.
      * If the piece is a Knight,
-     * it clears the set of pieces and adds the new Knight piece.
-     * Otherwise, it simply adds the new piece to the set.
-     * The runtime efficiency of this function depends on the size of the set.
+     * it clears the list of pieces and adds the new Knight piece.
+     * Otherwise, it simply adds the new piece to the list.
+     * The runtime efficiency of this function depends on the size of the list.
      * If the set is empty or contains only a Knight,
      * then the runtime efficiency is O(1).
      * If the set contains other pieces,
@@ -93,13 +108,9 @@ public class Cell {
      * check if the cell is empty
      * <p>
      *     This function checks if the cell is empty.
-     *     It gets the first piece in the piece set
+     *     It gets the first piece in the piece list
      *     and checks if its ID is 0 (indicating an empty cell).
-     *     The runtime efficiency of this function depends on the size of the set.
-     *     If the set is empty or contains only one piece,
-     *     then the runtime efficiency is O(1).
-     *     If the set contains more than one piece, then the runtime efficiency is O(n),
-     *     where n is the size of the set.
+     *     The runtime efficiency is O(1).
      * </p>
      *
      * @return if cell is empty (true) else false
@@ -114,14 +125,14 @@ public class Cell {
      * move the piece in the current cell to the destination cell
      * <p>
      *     This function moves the piece in the current cell to the destination cell.
-     *     It gets the iterator of the piece set and checks the size of the set.
+     *     It gets the iterator of the piece list and checks the size of the set.
      *     If the set contains more than one piece,
      *     it moves the second piece in the set (the first piece is assumed to be a Knight and is not moved).
-     *     Otherwise, it moves the only piece in the set.
-     *     The runtime efficiency of this function depends on the size of the set.
+     *     Otherwise, it moves the only piece in the list.
+     *     The runtime efficiency of this function depends on the size of the list.
      *     If the set is empty, then the runtime efficiency is O(1).
      *     If the set contains one or more pieces, then the runtime efficiency is O(n),
-     *     where n is the size of the set.
+     *     where n is the size of the list.
      * </p>
      * @param board : game board
      * @param dest_x : the destination cell column
@@ -140,6 +151,16 @@ public class Cell {
             return p.move(board, this.x, this.y, dest_x, dest_y);
         }
     }
+
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Cell cell)) return false;
+        return getX() == cell.getX() && getY() == cell.getY() && getPiece().equals(cell.getPiece());
+    }
+
 
     @Override
     public String toString() {

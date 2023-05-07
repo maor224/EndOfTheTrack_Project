@@ -1,8 +1,13 @@
 package com.example.endofthetrack_project.Controller;
 
+import com.example.endofthetrack_project.Model.AI.MCTSPlayer;
 import com.example.endofthetrack_project.Model.Board;
+import com.example.endofthetrack_project.Model.Cell;
 import com.example.endofthetrack_project.View.BoardView;
 import javafx.scene.text.Font;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * controller class that manage the game
@@ -21,6 +26,9 @@ public class GameController {
     private int dest_col;
     private int dest_row;
     private static int count = 0;
+    private List<Cell> cells;
+
+    private boolean isAI;
 
     /**
      * construct the controller and set the controller object in the view
@@ -28,12 +36,31 @@ public class GameController {
      * @param model : the model of the project that represent the board
      * @param view : the gui of the project in javafx
      */
-    public GameController(Board model, BoardView view) {
+    public GameController(Board model, BoardView view, boolean isAI) throws InterruptedException {
         this.model = model;
         this.view = view;
+        this.isAI = isAI;
         this.view.setController(this);
         this.view.getTurn().setText(this.getModel().getCurrPlayer().getColor() + " turn");
         this.view.getTurn().setFont(Font.font(20));
+        this.cells = new ArrayList<>();
+    }
+
+    public void manageGameWithAi () {
+        MCTSPlayer mctsPlayer = new MCTSPlayer();
+        mctsPlayer.setLevel(5);
+        this.model = mctsPlayer.findNextMove(this.model);
+        System.out.println(this.model);
+        this.model.getPlayers()[1].setPieces(this.model.getCurrPlayer().getPieces());
+        this.view.getValidMove().setText("Valid Move");
+        this.view.getValidMove().setFont(Font.font(20));
+        this.view.updateBoard(this.model);
+
+        switchTurn();
+    }
+
+    public boolean isAI() {
+        return isAI;
     }
 
     /**
@@ -63,12 +90,14 @@ public class GameController {
      * @param row : the row of the item that the user clicked on
      * @param col : the column of the item that the user clicked on
      */
-    public void handleMouseEvent (int row, int col) {
+    public void handleMouseEvent (int row, int col) throws InterruptedException {
         // handles the first click (for the source cell)
         if (count == 0) {
             this.current_row = row;
             this.current_col = col;
             if (model.validPosition(row, col)) {
+                cells.addAll(model.getAvailablePositions(model.getBoard()[row][col]));
+                view.showAvailableMoves(cells);
                 count++;
             }
         }
@@ -82,17 +111,24 @@ public class GameController {
                 this.view.getValidMove().setText("Valid Move");
                 this.view.getValidMove().setFont(Font.font(20));
                 this.view.getCellViews()[this.dest_row][this.dest_col].setCell(this.model.getBoard()[this.dest_row][this.dest_col]);
+                if (this.model.getBoard()[this.dest_row][this.dest_col].getPiece().size() == 1)
+                    cells.remove(this.model.getBoard()[this.dest_row][this.dest_col]);
+                view.unShowAvailableMoves(cells);
                 this.view.movePiece(this.model.getBoard()[this.current_row][this.current_col], this.model.getBoard()[this.dest_row][this.dest_col], this.current_row, this.current_col, this.dest_row, this.dest_col);
+
                 switchTurn();
+                if (isAI) {
+                    manageGameWithAi();
+                }
             }
             else {
                 // display in the screen if the current move is not valid
                 this.view.getValidMove().setText(this.model.getCurrPlayer().getNotValid());
                 this.view.getValidMove().setFont(Font.font(20));
+                view.unShowAvailableMoves(cells);
             }
             count = 0;
-
-//            switchTurn();
+            cells = new ArrayList<>();
         }
     }
 

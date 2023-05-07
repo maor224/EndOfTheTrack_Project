@@ -1,5 +1,7 @@
 package com.example.endofthetrack_project.Model;
 
+import java.util.Objects;
+
 /**
  * Piece class that represents the piece in the game
  * @author maor
@@ -20,6 +22,11 @@ public abstract class Piece {
     public Piece(String color, int id) {
         this.color = color;
         this.id = id;
+    }
+
+    public Piece(Piece piece) {
+        this.color = piece.color;
+        this.id = piece.id;
     }
 
     /**
@@ -43,6 +50,8 @@ public abstract class Piece {
      */
     public abstract boolean validMove(Cell[][] board, int source_x, int source_y, int dest_x, int dest_y);
 
+
+
     public String getColor() {
         return color;
     }
@@ -51,4 +60,16 @@ public abstract class Piece {
         return id;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Piece)) return false;
+        Piece piece = (Piece) o;
+        return getId() == piece.getId() && getColor().equals(piece.getColor());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getColor(), getId());
+    }
 }

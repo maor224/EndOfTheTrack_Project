@@ -17,6 +17,10 @@ public class Ball extends Piece {
         super(color, id);
     }
 
+    public Ball(Ball ball) {
+        super(ball);
+    }
+
     /**
      * move the ball to specific position in the board
      *<p>
@@ -38,11 +42,13 @@ public class Ball extends Piece {
         Cell sourceCell = board[source_y][source_x];
         Cell destCell = board[dest_y][dest_x];
 
-        Iterator<Piece> iterator = sourceCell.getPiece().iterator();
+
+        Iterator<Piece> iterator = sourceCell.getPiece().listIterator();
         if (validMove(board, source_x, source_y, dest_x, dest_y)) {
             iterator.next();
-            destCell.setPiece(iterator.next());
-            sourceCell.getPiece().remove(this);
+            Piece b = iterator.next();
+            destCell.setPiece(b);
+            sourceCell.getPiece().remove(b);
             return true;
         }
         return false;
@@ -72,6 +78,9 @@ public class Ball extends Piece {
             return false;
         }
 
+        if (source_x == dest_x && source_y == dest_y)
+            return false;
+
         if (source_x == dest_x || source_y == dest_y || Math.abs(source_x - dest_x) == Math.abs(source_y - dest_y)) {
             int dx = Integer.signum(dest_x - source_x);
             int dy = Integer.signum(dest_y - source_y);
@@ -81,7 +90,7 @@ public class Ball extends Piece {
             if (board[dest_y][dest_x].isEmpty()) {
                 return false;
             }
-            while (x != dest_x || y != dest_y) {
+            while ((x != dest_x || y != dest_y) && !foundOpponent) {
                 if (!board[y][x].isEmpty()) {
                     Piece piece = board[y][x].getPiece().iterator().next();
                     // Opponent piece blocking the way
@@ -94,6 +103,9 @@ public class Ball extends Piece {
         }
         return false;
     }
+
+
+
 
 
     @Override

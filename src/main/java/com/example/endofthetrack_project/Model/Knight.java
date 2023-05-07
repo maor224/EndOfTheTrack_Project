@@ -16,6 +16,10 @@ public class Knight extends Piece {
         super(color, id);
     }
 
+    public Knight(Knight knight) {
+        super(knight);
+    }
+
     /**
      * move a piece to specific position in the board
      * <p>
@@ -32,15 +36,18 @@ public class Knight extends Piece {
      */
     @Override
     public boolean move(Cell[][] board, int source_x, int source_y, int dest_x, int dest_y) {
+        Cell destCell = board[dest_y][dest_x];
+        Cell sourceCell = board[source_y][source_x];
         if (validMove(board, source_x, source_y, dest_x, dest_y)) {
-            if (board[source_y][source_x].getPiece().size() == 1) {
-                board[dest_y][dest_x].setPiece(board[source_y][source_x].getPiece().iterator().next());
-                board[source_y][source_x].setPiece(new Knight("none", 0));
+            if (sourceCell.getPiece().size() == 1) {
+                destCell.setPiece(sourceCell.getPiece().iterator().next());
+                sourceCell.setPiece(new Knight("none", 0));
                 return true;
             }
         }
         return false;
     }
+
 
     /**
      * check if move is valid by the piece moving rules
@@ -69,6 +76,8 @@ public class Knight extends Piece {
         int dy = Math.abs(dest_y - source_y);
         return (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
     }
+
+
 
     @Override
     public String toString() {

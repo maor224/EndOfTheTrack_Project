@@ -13,6 +13,7 @@ public class Board {
      */
     private static final int WIDTH = 7;
     private static final int HEIGHT = 8;
+    public static final int IN_PROGRESS = -1;
     private Cell[][] board;
     private Player currPlayer;
     private ArrayList<Piece> pieces;
@@ -36,6 +37,22 @@ public class Board {
         this.players = new Player[2];
         initPlayers();
         buildBoard();
+    }
+
+    public Board(Board board) {
+        this.board = new Cell[HEIGHT][WIDTH];
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                this.board[i][j] = new Cell(board.board[i][j]);
+            }
+        }
+        this.currPlayer = new Player(board.currPlayer);
+        this.pieces = new ArrayList<>();
+        this.pieces.addAll(board.pieces);
+        this.players = new Player[2];
+        for (int i = 0; i < board.players.length; i++) {
+            this.players[i] = new Player(board.players[i]);
+        }
     }
 
     /**
@@ -171,6 +188,60 @@ public class Board {
     }
 
     /**
+     * check the status of the game (player 1 win, player 2 win, game in progress)
+     * @return : value of the current status of the game
+     */
+    public int checkStatus() {
+        if (isWinner(currPlayer))
+            return currPlayer.getId();
+        else
+            return IN_PROGRESS;
+    }
+
+
+    public void setBoard(Cell[][] newBoard) {
+        for (int i = 0;i < newBoard.length;i++) {
+            for (int j = 0;j < newBoard[0].length;j++) {
+                this.board[i][j] = new Cell(newBoard[i][j]);
+            }
+        }
+//        this.board = newBoard;
+    }
+
+    public void setCurrPlayer(Player currPlayer) {
+        this.currPlayer = currPlayer;
+    }
+
+    public List<Cell> getAvailablePositions (Cell cell) {
+        List<Cell> availableCells = new ArrayList<>();
+        Iterator<Piece> iterator = cell.getPiece().iterator();
+        int[][] availableMovesForKnight = {{-2, -1}, {-2, 1}, {2, -1}, {2, 1},
+                {-1, -2}, {-1, 2}, {1, -2}, {1, 2}};
+        if (cell.getPiece().size() == 1) {
+            Piece p = iterator.next();
+            for (int[] movePos : availableMovesForKnight) {
+                if (p.validMove(this.board, cell.getX(), cell.getY(),
+                        cell.getX() + movePos[0], cell.getY() + movePos[1])) {
+                    availableCells.add(board[cell.getY() + movePos[1]][cell.getX() + movePos[0]]);
+                }
+            }
+        }
+        if (cell.getPiece().size() == 2) {
+            iterator.next();
+            Piece p = iterator.next();
+            for (Cell c : this.currPlayer.getPieces()) {
+                if (p.validMove(this.board, cell.getX(), cell.getY(),
+                        c.getX(), c.getY())) {
+                    availableCells.add(board[c.getY()][c.getX()]);
+                }
+            }
+        }
+        return availableCells;
+    }
+
+
+
+    /**
      * @return : string that represent the current board state
      */
     @Override
@@ -188,4 +259,44 @@ public class Board {
         }
         return s.toString();
     }
+
+    public void printCellsList (List<Cell> cells) {
+        Iterator<Cell> iterator = cells.listIterator();
+        for (Iterator<Cell> it = iterator; it.hasNext(); ) {
+            Cell c = it.next();
+            System.out.println("row: " + c.getX() + "\n" + "col: " + c.getY() + "\n\n");
+        }
+    }
+
+    public int getDistanceToGoal(Cell cell, int currentPlayer) {
+        int distance = 0;
+        int currRow = cell.getY();
+        int currCol = cell.getX();
+        int goalRow = (currentPlayer == 1) ? 0 : 7;
+
+        // If the player is already at the goal row, return 0
+        if (currRow == goalRow) {
+            return 0;
+        }
+
+        // If the player is above the goal row, add the difference in rows to the distance
+        if (currRow < goalRow) {
+            distance += goalRow - currRow;
+        }
+
+        // If the player is below the goal row, add the difference in rows plus the number of obstacles
+        if (currRow > goalRow) {
+            distance += currRow - goalRow;
+            for (int i = goalRow + 1; i < currRow; i++) {
+                if (!board[i][currCol].isEmpty()) {
+                    distance++;
+                }
+            }
+        }
+
+        return distance;
+    }
+
+
+
 }

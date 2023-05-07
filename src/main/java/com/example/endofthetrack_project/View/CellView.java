@@ -68,13 +68,21 @@ public class CellView extends StackPane {
                 this.knightView.setStroke(Color.BLACK);
                 this.knightView.setStrokeWidth(2);
 
-                getChildren().addAll(knightView);
+                this.ballView = new Circle(CIRCLE_SIZE, Color.TRANSPARENT);
+                this.ballView.setStroke(Color.BLACK);
+                this.ballView.setStrokeWidth(2);
+
+                getChildren().addAll(knightView, ballView);
             } else if (knight.getColor().equals("black")) {
                 this.knightView = new Rectangle(RECT_SIZE, RECT_SIZE, BLACK_KNIGHT);
                 this.knightView.setStroke(Color.WHITE);
                 this.knightView.setStrokeWidth(2);
 
-                getChildren().addAll(knightView);
+                this.ballView = new Circle(CIRCLE_SIZE, Color.TRANSPARENT);
+                this.ballView.setStroke(Color.WHITE);
+                this.ballView.setStrokeWidth(2);
+
+                getChildren().addAll(knightView, ballView);
             } else {
                 this.knightView = new Rectangle(RECT_SIZE, RECT_SIZE, NONE_KNIGHT);
                 this.knightView.setStroke(Color.TRANSPARENT);
