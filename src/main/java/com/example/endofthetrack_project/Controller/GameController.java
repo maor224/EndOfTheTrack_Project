@@ -4,6 +4,7 @@ import com.example.endofthetrack_project.Model.AI.MCTSPlayer;
 import com.example.endofthetrack_project.Model.Board;
 import com.example.endofthetrack_project.Model.Cell;
 import com.example.endofthetrack_project.View.BoardView;
+import javafx.application.Platform;
 import javafx.scene.text.Font;
 
 import java.util.ArrayList;
@@ -47,21 +48,32 @@ public class GameController {
     }
 
     public void manageGameWithAi () {
-        MCTSPlayer mctsPlayer = new MCTSPlayer();
-        mctsPlayer.setLevel(5);
-        this.model = mctsPlayer.findNextMove(this.model);
-        System.out.println(this.model);
-        this.model.getPlayers()[1].setPieces(this.model.getCurrPlayer().getPieces());
-        this.view.getValidMove().setText("Valid Move");
-        this.view.getValidMove().setFont(Font.font(20));
-        this.view.updateBoard(this.model);
+        if (view.getWinner().getText().equals("")) {
 
-        switchTurn();
+            Thread aiThread = new Thread(() -> {
+                MCTSPlayer mctsPlayer = new MCTSPlayer();
+                mctsPlayer.setLevel(15);
+                this.model = mctsPlayer.findNextMove(this.model);
+                System.out.println(this.model);
+                Platform.runLater(() -> {
+                    this.model.getPlayers()[1].setPieces(this.model.getCurrPlayer().getPieces());
+                    this.view.getValidMove().setText("Valid Move");
+                    this.view.getValidMove().setFont(Font.font(20));
+                    this.view.updateBoard(this.model);
+
+                    switchTurn();
+                });
+
+            });
+
+            aiThread.start();
+        }
+        else {
+            view.updateBoard(model);
+        }
     }
 
-    public boolean isAI() {
-        return isAI;
-    }
+
 
     /**
      * display the javafx window in the user screen
@@ -82,7 +94,7 @@ public class GameController {
      */
     public BoardView getView() {
         return view;
-    }
+}
 
     /**
      * this function handle the mouse clicked events and move
@@ -117,6 +129,7 @@ public class GameController {
                 this.view.movePiece(this.model.getBoard()[this.current_row][this.current_col], this.model.getBoard()[this.dest_row][this.dest_col], this.current_row, this.current_col, this.dest_row, this.dest_col);
 
                 switchTurn();
+
                 if (isAI) {
                     manageGameWithAi();
                 }
