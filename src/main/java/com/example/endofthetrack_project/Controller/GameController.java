@@ -89,12 +89,6 @@ public class GameController {
         return model;
     }
 
-    /**
-     * @return : the view of the game
-     */
-    public BoardView getView() {
-        return view;
-}
 
     /**
      * this function handle the mouse clicked events and move
