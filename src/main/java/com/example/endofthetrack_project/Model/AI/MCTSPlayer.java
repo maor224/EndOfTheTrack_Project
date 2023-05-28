@@ -101,6 +101,7 @@ public class MCTSPlayer {
         boolean canLoseNextMove = false;
         boolean flag = false;
 
+        System.out.println("hello");
         if (canOpponentWinNextMove(rootNode.getState().getBoard())) {
             List<Node> availableNodes = new ArrayList<>();
             canLoseNextMove = true;
