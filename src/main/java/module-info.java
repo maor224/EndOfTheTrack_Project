@@ -15,4 +15,6 @@ module com.example.endofthetrack_project {
     opens com.example.endofthetrack_project.Controller to javafx.fxml;
     exports com.example.endofthetrack_project.View;
     opens com.example.endofthetrack_project.View to javafx.fxml;
+    exports com.example.endofthetrack_project.Tests;
+    opens com.example.endofthetrack_project.Tests to javafx.fxml;
 }

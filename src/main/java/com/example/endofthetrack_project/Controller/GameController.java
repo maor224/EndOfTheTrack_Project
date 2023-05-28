@@ -52,14 +52,12 @@ public class GameController {
 
             Thread aiThread = new Thread(() -> {
                 MCTSPlayer mctsPlayer = new MCTSPlayer();
-                mctsPlayer.setLevel(15);
+                mctsPlayer.setLevel(50);
                 this.model = mctsPlayer.findNextMove(this.model);
                 System.out.println(this.model);
                 Platform.runLater(() -> {
                     this.model.getPlayers()[1].setPieces(this.model.getCurrPlayer().getPieces());
-                    this.view.getValidMove().setText("Valid Move");
-                    this.view.getValidMove().setFont(Font.font(20));
-                    this.view.updateBoard(this.model);
+                    updateGUIAfterComputerMove();
 
                     switchTurn();
                 });
@@ -71,6 +69,12 @@ public class GameController {
         else {
             view.updateBoard(model);
         }
+    }
+
+    private void updateGUIAfterComputerMove() {
+        this.view.getValidMove().setText("Valid Move");
+        this.view.getValidMove().setFont(Font.font(20));
+        this.view.updateBoard(this.model);
     }
 
 
@@ -120,13 +124,15 @@ public class GameController {
                 if (this.model.getBoard()[this.dest_row][this.dest_col].getPiece().size() == 1)
                     cells.remove(this.model.getBoard()[this.dest_row][this.dest_col]);
                 view.unShowAvailableMoves(cells);
-                this.view.movePiece(this.model.getBoard()[this.current_row][this.current_col], this.model.getBoard()[this.dest_row][this.dest_col], this.current_row, this.current_col, this.dest_row, this.dest_col);
+                view.updateBoard(this.model);
+
 
                 switchTurn();
 
                 if (isAI) {
                     manageGameWithAi();
                 }
+
             }
             else {
                 // display in the screen if the current move is not valid

@@ -2,8 +2,12 @@ package com.example.endofthetrack_project.Model.AI;
 
 import com.example.endofthetrack_project.Model.Board;
 import com.example.endofthetrack_project.Model.Cell;
+import com.example.endofthetrack_project.Model.Player;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -93,34 +97,109 @@ public class MCTSPlayer {
         rootNode.getState().setBoard(board);
         rootNode.getState().setPlayerNum(opponent);
 
-        // Perform the MCTS search until the time limit is reached
-        while (System.currentTimeMillis() < end) {
-            // Part 1 - Selection
-            Node selectedNode = selectPromisingNode(rootNode);
-            // Part 2 - Expansion
-            if (selectedNode.getState().getBoard().checkStatus() == Board.IN_PROGRESS) {
-                expand(selectedNode);
-            }
-            // Part 3 - Simulation
-            Node nodeToExplore = selectedNode;
-            if (selectedNode.getChildArray().size() > 0) {
-                nodeToExplore = selectedNode.getRandomChildNode();
-            }
-            nodeToExplore.getState().getBoard().getPlayers()[1]
-                    .setPieces(nodeToExplore.getState().getBoard().getCurrPlayer().getPieces());
+        Node winnerNode = null;
+        boolean canLoseNextMove = false;
+        boolean flag = false;
 
-            int result = simulateGame(nodeToExplore);
-            // Part 4 - Back Propagation
-            backPropagation(nodeToExplore, result);
-            count++;
+        if (canOpponentWinNextMove(rootNode.getState().getBoard())) {
+            List<Node> availableNodes = new ArrayList<>();
+            canLoseNextMove = true;
+            expand(rootNode);
+            for (Node node : rootNode.getChildArray()) {
+                State state = new State(node.getState());
+                if (!canOpponentWinNextMove(state.getBoard())) {
+                    availableNodes.add(node);
+                }
+            }
+            rootNode.getChildArray().clear();
+            System.out.println("times: " + count);
+            if (availableNodes.size() > 0) {
+                Random random = new Random();
+                int randomIndex = random.nextInt(availableNodes.size());
+                winnerNode = availableNodes.get(randomIndex);
+            }
+            else {
+                flag = true;
+            }
         }
-        System.out.println("times: " + count);
+        if (winnerNode == null || flag){
+            // Perform the MCTS search until the time limit is reached
+            while (System.currentTimeMillis() < end) {
+                // Part 1 - Selection
+                Node selectedNode = selectPromisingNode(rootNode);
+                // Part 2 - Expansion
+                if (selectedNode.getState().getBoard().checkStatus() == Board.IN_PROGRESS) {
+                    expand(selectedNode);
+                }
+                // Part 3 - Simulation
+                Node nodeToExplore = selectedNode;
+                if (selectedNode.getChildArray().size() > 0) {
+                    nodeToExplore = selectedNode.getRandomChildNode();
+                }
+                nodeToExplore.getState().getBoard().getPlayers()[1]
+                        .setPieces(nodeToExplore.getState().getBoard().getCurrPlayer().getPieces());
 
+                int result = simulateGame(nodeToExplore);
+                // Part 4 - Back Propagation
+                backPropagation(nodeToExplore, result);
+                count++;
+            }
+            System.out.println("times: " + count);
+        }
+
+
+
+        Board boardToReturn = null;
         // Select the child node with the highest score as the next move
-        Node winnerNode = rootNode.getChildWithMaxScore();
-        tree.setRoot(winnerNode);
-        return winnerNode.getState().getBoard();
+        if (!canLoseNextMove) {
+            if (winnerNode != null) {
+                tree.setRoot(winnerNode);
+                boardToReturn = winnerNode.getState().getBoard();
+            } else {
+                // Handle the case when winnerNode is null
+                Node childWithMaxScore = rootNode.getChildWithMaxScore();
+                if (childWithMaxScore != null) {
+                    tree.setRoot(childWithMaxScore);
+                    boardToReturn = childWithMaxScore.getState().getBoard();
+                }
+            }
+        }
+        else {
+            if (winnerNode != null) {
+                tree.setRoot(winnerNode);
+                boardToReturn = winnerNode.getState().getBoard();
+            } else {
+                // Handle the case when winnerNode is null
+                Node childWithMaxScore = rootNode.getChildWithMaxScore();
+                if (childWithMaxScore != null) {
+                    tree.setRoot(childWithMaxScore);
+                    boardToReturn = childWithMaxScore.getState().getBoard();
+                }
+            }
+        }
+        return boardToReturn;
     }
+
+    private boolean canOpponentWinNextMove(Board board) {
+        board.switchTurn();
+        int otherPlayer = board.getCurrPlayer().getId();
+        for (Cell cell : board.getPlayers()[otherPlayer - 1].getPieces()) {
+            if (cell.getPiece().size() == 2) {
+                List<Cell> availablePositions = board.getAvailablePositions(cell);
+                for (Cell position : availablePositions) {
+                    if (board.getDistanceToGoal(position, otherPlayer) == 0) {
+                        board.switchTurn();
+                        return true;
+                    }
+                }
+            }
+        }
+        board.switchTurn();
+        return false;
+    }
+
+
+
 
     /**
      * The selectPromisingNode function selects the most promising node in the tree to explore next,
@@ -144,6 +223,8 @@ public class MCTSPlayer {
         }
         return node;
     }
+
+
 
     /**
      * Expands a node in the Monte Carlo Tree Search (MCTS) algorithm

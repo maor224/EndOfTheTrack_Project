@@ -212,7 +212,6 @@ public class State {
      * </p>
      * @param node the node from which the random play will start.
      */
-
     public void randomPlay(Node node) {
         // Get available positions for all player pieces
         List<Cell> availablePositions = new ArrayList<>();
@@ -224,135 +223,18 @@ public class State {
         // Shuffle the available positions randomly
         Collections.shuffle(availablePositions);
 
-        // Try moving to the available positions in random order, with priority given to winning and blocking the opponent
-        int eval = evaluate(node.getState().getBoard());
-        boolean prioritizeWinning = (eval > 0);
-        boolean prioritizeBlocking = (eval < 0);
-        boolean prioritizeDefensive = (eval < -5); // if enemy is close to my territory
-        boolean prioritizeOffensive = (eval > 5); // if enemy is far from my territory
-        boolean prioritizePass = (eval > 10); // if opponent is far from me and ball is in a good position to pass
 
+        // Try moving to the available positions in random order
         for (Cell selectedCell : availablePositions) {
             for (Cell cell : cells) {
                 if (this.board.getAvailablePositions(cell).contains(selectedCell)) {
                     if (this.board.getCurrPlayer().makeMove(this.board.getBoard(), cell, selectedCell)) {
-                        // If prioritizing winning, blocking, or defensive moves, only make the move if it brings the player closer to their goal
-                        // If prioritizing offensive moves or passing, make the move regardless
-                        int newEval = evaluate(this.board);
-                        boolean opponentCanWinNextMove = canOpponentWinNextMove(this.board);
-                        if ((!prioritizeWinning || newEval > eval) && (!prioritizeBlocking || newEval < eval)
-                                && (!prioritizeDefensive || newEval < eval) && (!prioritizeOffensive || newEval > eval)
-                                && (!prioritizePass || newEval >= eval) &&
-                                !this.board.getBoard().equals(node.getState()
-                                        .getBoard().getBoard()) && opponentCanWinNextMove) {
-                            node.getState().setBoard(this.board);
-                            return;
-                        }
-                        this.board.getCurrPlayer().makeMove(this.getBoard().getBoard(), cell, selectedCell);
+                        node.getState().setBoard(this.board);
+                        return;
                     }
                 }
             }
         }
-    }
-
-
-
-    public int evaluate(Board board) {
-        int currentPlayer = board.getCurrPlayer().getId();
-        int otherPlayer = (currentPlayer == 1) ? 2 : 1;
-
-        // Check if opponent ball can be blocked
-        boolean blockOpponent = false;
-        for (Cell cell : board.getPlayers()[otherPlayer - 1].getPieces()) {
-            if (cell.getPiece().size() == 2 && !blockOpponent) {
-                int distance = board.getDistanceToGoal(cell, currentPlayer);
-                if (distance == 1) {
-                    blockOpponent = true;
-                }
-            }
-        }
-        if (blockOpponent) {
-            return -10;
-        }
-
-        // Check if opponent is in my half of the board and prioritize defense
-        boolean defensive = false;
-        for (Cell cell : board.getPlayers()[otherPlayer - 1].getPieces()) {
-            int distance = board.getDistanceToGoal(cell, currentPlayer);
-            if (distance <= 3 && !defensive) {
-                defensive = true;
-            }
-        }
-
-        // Check if opponent is far from me and prioritize offense
-        boolean offensive = false;
-        for (Cell cell : board.getPlayers()[otherPlayer - 1].getPieces()) {
-            int distance = board.getDistanceToGoal(cell, currentPlayer);
-            if (distance > 3 && !offensive) {
-                offensive = true;
-            }
-        }
-
-        // Check if the ball is in a position to score a goal
-        for (Cell cell : board.getCurrPlayer().getPieces()) {
-            if (cell.getPiece().size() == 2) {
-                int distance = board.getDistanceToGoal(cell, currentPlayer);
-                if (distance == 0) {
-                    return 10;
-                }
-            }
-        }
-
-        // Move the ball as far forward as possible
-        int currentDistance = Integer.MAX_VALUE;
-        Cell farthestCell = null;
-        for (Cell cell : board.getCurrPlayer().getPieces()) {
-            if (cell.getPiece().size() == 2) {
-                int distance = board.getDistanceToGoal(cell, currentPlayer);
-                if (distance < currentDistance) {
-                    currentDistance = distance;
-                    farthestCell = cell;
-                }
-            }
-        }
-
-
-        // check the closest piece to the end of the board
-        int farthestDistance = currentDistance;
-        if (farthestCell != null) {
-            List<Cell> availablePositions = board.getAvailablePositions(farthestCell);
-            for (Cell position : availablePositions) {
-                int distance = board.getDistanceToGoal(position, currentPlayer);
-                if (distance < farthestDistance) {
-                    farthestDistance = distance;
-                }
-            }
-        }
-
-        if (defensive) {
-            return 2 * (farthestDistance + 1);
-        } else if (offensive) {
-            return 10 * (farthestDistance + 1);
-        } else {
-            return farthestDistance + 1;
-        }
-    }
-
-    // Helper function to check if the opponent can win the next move
-    private boolean canOpponentWinNextMove(Board board) {
-        int currentPlayer = board.getCurrPlayer().getId();
-        int otherPlayer = (currentPlayer == 1) ? 2 : 1;
-        for (Cell cell : board.getPlayers()[otherPlayer - 1].getPieces()) {
-            if (cell.getPiece().size() == 2) {
-                List<Cell> availablePositions = board.getAvailablePositions(cell);
-                for (Cell position : availablePositions) {
-                    if (board.getDistanceToGoal(position, currentPlayer) == 0) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
     }
 
 
