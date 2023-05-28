@@ -49,7 +49,6 @@ public class GameController {
 
     public void manageGameWithAi () {
         if (view.getWinner().getText().equals("")) {
-            System.out.println("hello");
             Thread aiThread = new Thread(() -> {
                 MCTSPlayer mctsPlayer = new MCTSPlayer();
                 mctsPlayer.setLevel(50);
